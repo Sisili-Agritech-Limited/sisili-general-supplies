@@ -1,0 +1,16 @@
+{
+  "name": "sisili-general-supplies",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static website for Sisili General Supplies — agricultural and general supply company, Nairobi.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:hosted": "node build.mjs --linked",
+    "serve": "node build.mjs --serve",
+    "dev": "node build.mjs --serve --watch"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
