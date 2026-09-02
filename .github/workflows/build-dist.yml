@@ -1,0 +1,31 @@
+name: Rebuild dist
+
+# HostAfrica's cPanel Git Version Control has no Node.js to run build.mjs on
+# pull, so dist/ has to be pre-built and committed. This keeps it in sync
+# automatically instead of relying on remembering to build before every push.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, '[skip build]')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: node build.mjs --linked
+
+      - name: Commit dist if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f dist
+          git diff --cached --quiet || git commit -m "chore: rebuild dist [skip build]"
+          git push

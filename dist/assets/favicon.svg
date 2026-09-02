@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Sisili">
+  <rect width="32" height="32" fill="#0F3A31"/>
+  <rect x="6"  y="10" width="20" height="3.5" fill="#F5F1E8"/>
+  <rect x="11" y="16" width="15" height="3.5" fill="#F5F1E8"/>
+  <rect x="17" y="22" width="9"  height="3.5" fill="#C0522C"/>
+</svg>

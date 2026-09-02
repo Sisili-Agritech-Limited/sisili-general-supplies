@@ -1,5 +1,4 @@
 .vercel
-dist
 originals
 node_modules
 .claude

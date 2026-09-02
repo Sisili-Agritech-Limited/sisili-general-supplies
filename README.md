@@ -200,9 +200,41 @@ For a real host, build with `npm run build:hosted` (`node build.mjs --linked`) r
 plain-file default — it produces clean URLs (`/supplies/`) and a shared, cacheable stylesheet
 and script instead of copying them into every page.
 
-- **cPanel / shared hosting** — upload the contents of `dist/` into `public_html`.
+- **Vercel** — `vercel.json` sets `buildCommand: npm run build:hosted` and
+  `outputDirectory: dist`, so Vercel builds it fresh on every deploy. `dist/` doesn't need to be
+  committed for this path.
 - **Netlify / Cloudflare Pages / GitHub Pages** — build command `npm run build:hosted`, publish
   directory `dist`.
+- **cPanel / shared hosting, manual upload** — upload the contents of `dist/` into `public_html`.
+- **cPanel Git Version Control (e.g. HostAfrica), pulling from GitHub** — see below. These hosts
+  have no Node.js to run the build on pull, so `dist/` has to already contain real HTML in the
+  repo.
 
 The directory-per-page layout means clean URLs work everywhere without rewrite rules. Set
 `site.origin` before building so the canonical URLs and sitemap point at the real domain.
+
+### HostAfrica (cPanel Git Version Control)
+
+`dist/` is committed to this repo specifically for this path, and kept in sync automatically by
+`.github/workflows/build-dist.yml`: every push to `main` rebuilds it with `--linked` and, if
+anything changed, commits it straight back with `[skip build]` in the message (which the workflow
+checks for, so it doesn't trigger itself in a loop).
+
+`.cpanel.yml` at the repo root defines the deployment task that runs when you click **Deploy HEAD
+Commit** in cPanel (or via an auto-deploy webhook) after a pull — it copies `dist/*` into the
+live document root:
+
+```yaml
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/domains/sisilisupplies.co.ke/public_html/
+    - /bin/cp -R dist/* $DEPLOYPATH
+```
+
+If deployment serves the wrong thing or fails outright, check the exact path in cPanel →
+**Domains** → `sisilisupplies.co.ke` → **Document Root** and hardcode it in `.cpanel.yml` in
+place of `$HOME/...` if it doesn't match.
+
+Note `cp -R` overwrites and adds files but never deletes ones that no longer exist in `dist/` —
+a page removed from the site will keep serving a stale file until it's cleaned up on the server
+by hand.
