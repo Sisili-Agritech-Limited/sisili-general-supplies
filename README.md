@@ -27,6 +27,7 @@ either layout without configuration — pick `--linked` only if that trade-off m
 ```bash
 npm run build          # dist/ as flat, self-contained .html files — open dist/index.html directly
 npm run build:hosted    # dist/ as clean URLs + shared assets — for deploying to a real host
+npm run build:root      # same clean-URL layout, written straight into the repo root — see Deployment
 npm run serve           # build, then serve dist/ at http://localhost:4173
 npm run dev             # same, plus rebuild on file changes
 ```
@@ -44,11 +45,19 @@ src/
   layout.js            document shell, header, footer, SEO meta, JSON-LD
   components.js        markup shared between pages
   pages/               one module per page template
-assets/                copied verbatim to dist/assets/
-  styles.css           design tokens and every component style
-  app.js               menu, reveal, accordions, quote form
-dist/                  build output — deploy this
+  assets/              copied verbatim to the output's assets/
+    styles.css         design tokens and every component style
+    app.js              menu, reveal, accordions, quote form
+dist/                  build output for npm run build / build:hosted — gitignored, deploy this
 ```
+
+`npm run build:root` is the exception to "`dist/` is the build output" — it writes the same
+`--linked` layout straight into the repo root instead (`index.html`, `about/`, `assets/`, ...),
+committed there rather than gitignored. It exists only for hosts that git-pull this repo directly
+into their document root with no build step of their own — see **Deployment** below. Cleaning
+before a rebuild in that mode deletes only the specific top-level names it owns (listed as
+`ROOT_MANAGED_ENTRIES` in `build.mjs`), never a blind wipe of the directory, so `src/`,
+`build.mjs`, `package.json` and friends are never at risk.
 
 ### Pages
 
@@ -206,35 +215,38 @@ and script instead of copying them into every page.
 - **Netlify / Cloudflare Pages / GitHub Pages** — build command `npm run build:hosted`, publish
   directory `dist`.
 - **cPanel / shared hosting, manual upload** — upload the contents of `dist/` into `public_html`.
-- **cPanel Git Version Control (e.g. HostAfrica), pulling from GitHub** — see below. These hosts
-  have no Node.js to run the build on pull, so `dist/` has to already contain real HTML in the
-  repo.
+- **cPanel Git Version Control, repository path *is* the document root (e.g. HostAfrica)** — see
+  below. `npm run build:root` instead of `build:hosted`.
 
 The directory-per-page layout means clean URLs work everywhere without rewrite rules. Set
 `site.origin` before building so the canonical URLs and sitemap point at the real domain.
 
 ### HostAfrica (cPanel Git Version Control)
 
-`dist/` is committed to this repo specifically for this path, and kept in sync automatically by
-`.github/workflows/build-dist.yml`: every push to `main` rebuilds it with `--linked` and, if
-anything changed, commits it straight back with `[skip build]` in the message (which the workflow
-checks for, so it doesn't trigger itself in a loop).
+HostAfrica's cPanel Git Version Control is configured with the repository path set directly to
+the domain's document root
+(`~/domains/sisilisupplies.co.ke/public_html/`) — there's no separate clone location and no
+Node.js to run a build on pull. So the generated site has to already be real files sitting at the
+*top* of the repo when cPanel pulls it, which is exactly what `npm run build:root`
+(`node build.mjs --root`) produces: `index.html`, `about/`, `assets/`, etc. written straight into
+the repo root, alongside (not replacing) `src/`, `build.mjs`, `package.json` and the rest of the
+source.
 
-`.cpanel.yml` at the repo root defines the deployment task that runs when you click **Deploy HEAD
-Commit** in cPanel (or via an auto-deploy webhook) after a pull — it copies `dist/*` into the
-live document root:
+This is kept in sync automatically by `.github/workflows/build-dist.yml`: every push to `main`
+rebuilds with `--root` and, if anything changed, commits it straight back with `[skip build]` in
+the message (which the workflow checks for, so it doesn't trigger itself in a loop). So day to
+day: edit `src/content.js` or whatever, push to `main`, wait for the Action to commit the
+rebuilt output, then pull in cPanel — no deployment task needed, since the repo root already *is*
+the document root.
 
-```yaml
-deployment:
-  tasks:
-    - export DEPLOYPATH=$HOME/domains/sisilisupplies.co.ke/public_html/
-    - /bin/cp -R dist/* $DEPLOYPATH
-```
+Two things worth knowing:
 
-If deployment serves the wrong thing or fails outright, check the exact path in cPanel →
-**Domains** → `sisilisupplies.co.ke` → **Document Root** and hardcode it in `.cpanel.yml` in
-place of `$HOME/...` if it doesn't match.
-
-Note `cp -R` overwrites and adds files but never deletes ones that no longer exist in `dist/` —
-a page removed from the site will keep serving a stale file until it's cleaned up on the server
-by hand.
+- The build only deletes the specific top-level names it generates (`index.html`, `about/`,
+  `assets/`, etc. — the full list is `ROOT_MANAGED_ENTRIES` in `build.mjs`), never the whole
+  directory, so source and tooling files are never at risk even though they live side by side
+  with the generated output.
+- Source and tooling files (`build.mjs`, `src/`, `package.json`, `README.md`, `.github/`) end up
+  readable at the live domain (e.g. `sisilisupplies.co.ke/build.mjs`) since they sit in the same
+  directory the web server serves from. Nothing in them is secret, but if that ever changes, it
+  needs a real `Repository Path` outside `public_html` plus a `.cpanel.yml` deployment task to
+  copy the build output across instead.

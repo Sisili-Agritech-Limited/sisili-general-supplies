@@ -5,7 +5,12 @@
  * as static HTML, copies assets/, and emits sitemap.xml + robots.txt.
  *
  *   node build.mjs            self-contained flat files — open dist/index.html
- *   node build.mjs --linked   hosted layout: clean URLs + shared css/js
+ *   node build.mjs --linked   hosted layout: clean URLs + shared css/js, into dist/
+ *   node build.mjs --root     hosted layout written straight into the repo root —
+ *                             for hosts (e.g. cPanel Git Version Control pointed
+ *                             directly at a doc root) that git-pull the repo with
+ *                             no build step of their own, so index.html has to
+ *                             already be sitting at the top of the repo
  *   node build.mjs --serve    build, then serve dist/ on http://localhost:4173
  *   node build.mjs --serve --watch   rebuild on file changes
  */
@@ -18,20 +23,41 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
-const ASSETS = join(ROOT, 'assets');
-const DIST = join(ROOT, 'dist');
+const ASSETS = join(SRC, 'assets');
 
 const args = new Set(process.argv.slice(2));
 const SERVE = args.has('--serve');
 const WATCH = args.has('--watch');
+const ROOT_MODE = args.has('--root');
+
+const DIST = ROOT_MODE ? ROOT : join(ROOT, 'dist');
+
+/**
+ * The top-level dist/ entries build.mjs owns in --root mode. Cleaning before
+ * a rebuild must delete exactly these and nothing else — the repo root also
+ * holds source (src/, build.mjs, package.json, ...) and tooling (.git,
+ * .github, node_modules) that a blind recursive wipe would destroy.
+ */
+const ROOT_MANAGED_ENTRIES = [
+  'index.html',
+  '404.html',
+  'sitemap.xml',
+  'robots.txt',
+  'assets',
+  'about',
+  'contact',
+  'how-it-works',
+  'quote',
+  'supplies',
+];
 
 /**
  * Default output is self-contained: flat .html files with the CSS and JS
  * inlined, so double-clicking dist/index.html browses the whole site offline.
- * Pass --linked for the hosted layout instead — directory-per-page clean URLs
- * (/supplies/) with a shared, cacheable stylesheet and script.
+ * Pass --linked (or --root) for the hosted layout instead — directory-per-page
+ * clean URLs (/supplies/) with a shared, cacheable stylesheet and script.
  */
-const STANDALONE = !args.has('--linked');
+const STANDALONE = !args.has('--linked') && !ROOT_MODE;
 
 /* ------------------------------------------------------------------ *
  * Routes
@@ -89,7 +115,13 @@ async function build() {
     quote: (await load('pages/quote.js')).default,
   };
 
-  await rm(DIST, { recursive: true, force: true });
+  if (ROOT_MODE) {
+    for (const name of ROOT_MANAGED_ENTRIES) {
+      await rm(join(DIST, name), { recursive: true, force: true });
+    }
+  } else {
+    await rm(DIST, { recursive: true, force: true });
+  }
   await mkdir(DIST, { recursive: true });
 
   const routes = await collectRoutes(content, pages);
@@ -135,11 +167,14 @@ async function build() {
   await writeFile(join(DIST, 'sitemap.xml'), renderSitemap(routes, content.site), 'utf8');
   await writeFile(join(DIST, 'robots.txt'), renderRobots(content.site), 'utf8');
 
+  const distLabel = ROOT_MODE ? './' : `${relative(ROOT, DIST)}/`;
   console.log(
-    `built ${routes.length} pages in ${Date.now() - started}ms → ${relative(ROOT, DIST)}/` +
+    `built ${routes.length} pages in ${Date.now() - started}ms → ${distLabel}` +
       (STANDALONE
         ? ' (flat .html files only — open dist/index.html directly)'
-        : ' (linked assets)'),
+        : ROOT_MODE
+          ? ' (linked assets, written to repo root)'
+          : ' (linked assets)'),
   );
   return routes;
 }
@@ -304,12 +339,10 @@ if (SERVE) {
 
   if (WATCH) {
     let pending = null;
-    for (const dir of [SRC, ASSETS]) {
-      watch(dir, { recursive: true }, () => {
-        clearTimeout(pending);
-        pending = setTimeout(() => build().catch((err) => console.error(err)), 80);
-      });
-    }
-    console.log('watching src/ and assets/ for changes');
+    watch(SRC, { recursive: true }, () => {
+      clearTimeout(pending);
+      pending = setTimeout(() => build().catch((err) => console.error(err)), 80);
+    });
+    console.log('watching src/ (including src/assets/) for changes');
   }
 }
