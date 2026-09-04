@@ -113,30 +113,45 @@ Run `npm run build` and search `dist/` for `[` to confirm none are left.
 Both the quote form and the contact enquiry form are driven by `site.formEndpoint` in
 `src/content.js`.
 
-**Left empty (the default).** Nothing is silently swallowed. The quote form validates, collects
-everything, and then presents the finished request as text with *Send on WhatsApp*, *Send by
-email* and *Copy the list* buttons. This is a genuinely usable day-one setup for a small
-business — but no request reaches a database, and no reference number is issued.
+**Left empty.** Nothing is silently swallowed. The quote form validates, collects everything, and
+then presents the finished request as text with *Send on WhatsApp*, *Send by email* and *Copy the
+list* buttons. This is a genuinely usable day-one setup for a small business — but no request
+reaches a database, and no reference number is issued.
 
-**With an endpoint set.** The form POSTs `multipart/form-data` and expects a JSON response. If
-the response contains `{ "reference": "SGS-2026-0148" }`, that reference is shown on the
-confirmation screen; otherwise the confirmation appears without one. If the request fails, the
-visitor falls back to the WhatsApp/email handoff rather than losing what they typed.
+**With an endpoint set (the current default).** `formEndpoint` points at
+[Web3Forms](https://web3forms.com) (`https://api.web3forms.com/submit`), a static-site form
+backend that emails submissions straight to whatever address `formAccessKey` is registered
+against — no server of our own. Both forms carry a hidden `access_key` (the value of
+`site.formAccessKey` — a public, per-account identifier Web3Forms is designed to be embedded
+with, not a secret) and a `subject` line so quote requests and general enquiries are easy to tell
+apart in the inbox.
+
+The form POSTs `multipart/form-data` and expects a JSON response. Web3Forms replies with
+`{ "success": true, "message": "..." }` — no `reference` field, so the confirmation screen just
+shows the generic itemised-quotation message. Any backend that instead returns
+`{ "reference": "SGS-2026-0148" }` gets that reference shown on the confirmation screen. If the
+request fails, the visitor falls back to the WhatsApp/email handoff rather than losing what they
+typed.
+
+The `company_website` honeypot field is checked client-side in `src/assets/app.js` (`isSpam()`) —
+a filled-in value skips the network request entirely and shows the same success state a real
+submission would, so a bot has nothing to react to.
 
 Fields posted by the quote form:
 
 | Field | Notes |
 | --- | --- |
+| `access_key`, `subject` | Web3Forms routing — account key and email subject line |
 | `categories` | repeated, one per selected supply line |
 | `item_name`, `item_qty`, `item_unit` | repeated, one set per item row, in order |
 | `attachment` | zero or more files |
 | `location`, `needed_by`, `fulfilment`, `notes` | delivery details |
 | `name`, `organisation`, `phone`, `email`, `whatsapp_copy` | contact details |
-| `company_website` | honeypot — **if this is non-empty, discard the submission** |
+| `company_website` | honeypot — filtered client-side, never reaches the network |
 
-Server-side work still to do, per the brand specification: virus-scan uploads, rate-limit by IP,
-store the row, email the sourcing desk, and send an auto-acknowledgement carrying the reference
-number.
+Still to do, per the brand specification: virus-scan uploads, rate-limit by IP, and store a copy
+of each row somewhere queryable — Web3Forms is mail-only, it doesn't give you a database or a
+dashboard of past submissions.
 
 ---
 

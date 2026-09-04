@@ -121,6 +121,9 @@
 
   const value = (el) => (el && el.value ? el.value.trim() : '');
 
+  /** True once the honeypot field is filled in — no real visitor ever sees it. */
+  const isSpam = (form) => Boolean(value(form.querySelector('[name="company_website"]')));
+
   /** Build a WhatsApp deep link, or null when no number is configured. */
   function whatsappLink(text) {
     if (!config.whatsapp) return null;
@@ -521,6 +524,13 @@
         return;
       }
 
+      // Silently pretend success — a real visitor never fills this field, so
+      // there's nothing to explain and nothing worth alerting a bot to.
+      if (isSpam(form)) {
+        showSubmitted({});
+        return;
+      }
+
       if (!config.formEndpoint) {
         showHandoff();
         return;
@@ -608,6 +618,14 @@
       if (!value(name)) return say('Add your name so we know who is asking.', 'err'), name.focus();
       if (!value(reply)) return say('Add a phone number or email so we can reply.', 'err'), reply.focus();
       if (!value(question)) return say('Let us know what you’d like to ask.', 'err'), question.focus();
+
+      // Silently pretend success — a real visitor never fills this field, so
+      // there's nothing to explain and nothing worth alerting a bot to.
+      if (isSpam(form)) {
+        form.reset();
+        say('Thank you — we’ve got your question and will reply during working hours.');
+        return;
+      }
 
       const body = `Enquiry from ${value(name)}\nReply to: ${value(reply)}\n\n${value(question)}`;
 

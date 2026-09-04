@@ -34,7 +34,7 @@ const site = {
    */
   phone: { display: '+254 722 391593', raw: '+254722391593' },
   whatsapp: { display: '+254 722 391593', raw: '254722391593' },
-  email: { display: 'info@sisili.co.ke', raw: 'info@sisili.co.ke' },
+  email: { display: 'info@sisilisupplies.co.ke', raw: 'info@sisilisupplies.co.ke' },
 
   address: {
     display: 'Nairobi',
@@ -72,8 +72,19 @@ const site = {
    * Where the quote and enquiry forms POST. Leave empty to run without a
    * backend: the form then hands the completed list to WhatsApp or email
    * instead of silently pretending to submit. See README.md.
+   *
+   * Currently Web3Forms (https://web3forms.com) — a static-site form
+   * backend, no server of our own required. It emails submissions to
+   * whatever address the access key below is registered against.
    */
-  formEndpoint: '',
+  formEndpoint: 'https://api.web3forms.com/submit',
+
+  /**
+   * Web3Forms access key. This is a public, per-account identifier meant to
+   * sit in client-side HTML (that's how Web3Forms hands it out) — not a
+   * secret, safe to commit.
+   */
+  formAccessKey: '0b21c188-6d42-4d86-af7c-b455877baf33',
 
   /**
    * Default social-share image (og:image / twitter:image), site-wide. Pass

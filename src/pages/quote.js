@@ -102,6 +102,8 @@ export default function quote({ content }) {
       <form class="quote-layout" data-quote-form novalidate
             action="${esc(site.formEndpoint || '')}" method="post" enctype="multipart/form-data">
         <div class="quote-form">
+          <input type="hidden" name="access_key" value="${esc(site.formAccessKey)}">
+          <input type="hidden" name="subject" value="Quotation request — ${esc(site.name)}">
           <p class="hp" aria-hidden="true">
             <label>Leave this field empty
               <input type="text" name="company_website" tabindex="-1" autocomplete="off">
