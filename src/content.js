@@ -43,6 +43,14 @@ const site = {
     region: 'Nairobi County',
     country: 'KE',
     postalCode: '[POSTAL CODE]',
+    /**
+     * What the Contact page embeds as the map — an exact address or
+     * "lat,lng" pair. Google's no-API-key embed just needs a query it can
+     * geocode, so this can be the same text as `street`, but doesn't have
+     * to be (coordinates are more reliable if the street name alone is
+     * ambiguous).
+     */
+    mapQuery: '[MAP QUERY — address or "lat,lng"]',
     /** Google Maps directions link for the Contact page. */
     directionsUrl: '[https://maps.google.com/?q=...]',
   },
@@ -66,6 +74,12 @@ const site = {
    * instead of silently pretending to submit. See README.md.
    */
   formEndpoint: '',
+
+  /**
+   * Default social-share image (og:image / twitter:image), site-wide. Pass
+   * `image` to renderDocument() per-page to override it.
+   */
+  ogImage: '/assets/images/store-interior.jpg',
 
   social: [
     // { label: 'Facebook', url: 'https://facebook.com/...' },

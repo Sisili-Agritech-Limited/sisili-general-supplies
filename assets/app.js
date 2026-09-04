@@ -362,6 +362,17 @@
         }
       }
 
+      if (step === 2) {
+        const location = $('[data-summary="location"]', form);
+        if (!value(location)) {
+          showError(
+            'Add your delivery location so we can quote the full landed price.',
+            location,
+          );
+          return false;
+        }
+      }
+
       if (step === 3) {
         const name = $('[data-summary="name"]', form);
         const phone = $('[data-summary="phone"]', form);

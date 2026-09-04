@@ -14,13 +14,13 @@ const ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '
 export const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ENTITIES[c]);
 
 /**
- * Render a business detail. Values still written as [PLACEHOLDER] are marked
- * up so they are unmistakable on the page rather than reading as real data.
+ * Render a business detail. Values still written as [PLACEHOLDER] in
+ * src/content.js are never shown to a visitor — an honest fallback renders
+ * instead, so neither fabricated data nor an internal editing note ever
+ * reaches the live page.
  */
-export function detail(value) {
-  return isPlaceholder(value)
-    ? `<span class="placeholder" title="Placeholder — replace in src/content.js">${esc(value)}</span>`
-    : esc(value);
+export function detail(value, fallback = 'Available on request.') {
+  return isPlaceholder(value) ? esc(fallback) : esc(value);
 }
 
 /** A filled value, or null when it is still a placeholder. */
@@ -269,8 +269,8 @@ function renderFooter(content) {
         <div>
           <p class="footer__title">Contact</p>
           <div class="footer__contact">
-            <a href="${telHref(site)}">${detail(site.phone.display)}</a>
-            <a href="${waHref(site)}" rel="noopener">${detail(site.whatsapp.display)}</a>
+            <a href="${telHref(site)}"><span class="kv__k" style="margin-right:6px; color:var(--ink-muted)">Phone</span>${detail(site.phone.display)}</a>
+            <a href="${waHref(site)}" rel="noopener"><span class="kv__k" style="margin-right:6px; color:var(--ink-muted)">WhatsApp</span>${detail(site.whatsapp.display)}</a>
             <a href="${mailHref(site)}">${detail(site.email.display)}</a>
             <span>${detail(site.address.display)}</span>
             <span>${detail(site.hours.display)}</span>
@@ -311,6 +311,7 @@ function renderActionBar(content, categoryName) {
  * @param {string} page.main         page markup, inserted inside <main>
  * @param {object[]} [page.jsonLd]   extra structured-data blocks
  * @param {string} [page.categoryName] pre-fills the mobile WhatsApp link
+ * @param {string} [page.image]      og:image / twitter:image override; defaults to site.ogImage
  */
 export function renderDocument({
   title,
@@ -319,6 +320,7 @@ export function renderDocument({
   jsonLd = [],
   categoryName = null,
   hideActionBar = false,
+  image = null,
   content,
   url,
 }) {
@@ -326,6 +328,12 @@ export function renderDocument({
   const origin = filled(site.origin);
   const canonical = origin ? `${origin}${url}` : null;
   const blocks = [businessJsonLd(content), ...jsonLd].map(jsonLdScript).join('\n  ');
+
+  // WhatsApp and other unfurlers need an absolute URL — without a real
+  // origin yet, there's no correct absolute URL to emit, so the tag is
+  // left out entirely rather than shipping a broken relative one.
+  const imagePath = image || filled(site.ogImage);
+  const ogImage = origin && imagePath ? `${origin}${imagePath}` : null;
 
   return `<!doctype html>
 <html lang="en-KE">
@@ -341,7 +349,9 @@ export function renderDocument({
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
   ${canonical ? `<meta property="og:url" content="${esc(canonical)}">` : ''}
+  ${ogImage ? `<meta property="og:image" content="${esc(ogImage)}">` : ''}
   <meta name="twitter:card" content="summary_large_image">
+  ${ogImage ? `<meta name="twitter:image" content="${esc(ogImage)}">` : ''}
   <meta name="theme-color" content="#0F3A31">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -389,6 +399,7 @@ export function renderNotFound({ content }) {
         <div class="button-row mt-3">
           <a class="btn btn--clay" href="/supplies/">See what we supply</a>
           <a class="btn btn--outline" href="/">Back to home</a>
+          <a class="btn btn--outline" href="/contact/">Contact us</a>
         </div>
       </div>
     </section>`;

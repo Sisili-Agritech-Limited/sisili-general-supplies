@@ -618,6 +618,8 @@ a:hover {
 
 .header__phone {
   text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .header__phone .eyebrow {
@@ -2020,14 +2022,6 @@ a:hover {
   }
 }
 
-/* Values still awaiting real business details render visibly unfilled. */
-.placeholder {
-  font-style: normal;
-  color: var(--muted);
-  background: rgba(180, 136, 15, 0.12);
-  box-shadow: inset 0 -1px 0 rgba(180, 136, 15, 0.5);
-  padding: 0 2px;
-}
 
 .visually-hidden {
   position: absolute;

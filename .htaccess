@@ -1,0 +1,3 @@
+# Serve the site's own branded 404 page instead of Apache's bare default —
+# see src/layout.js's renderNotFound() for what actually renders.
+ErrorDocument 404 /404.html

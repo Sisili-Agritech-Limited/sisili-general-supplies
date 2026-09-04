@@ -82,7 +82,7 @@ export default function about({ content }) {
             <div class="panel">
               <p class="eyebrow" style="font-size:10.5px">Client feedback</p>
               <p class="panel__title" style="font-size:19px; margin-top:10px">
-                [TESTIMONIAL — to be added]
+                Coming soon
               </p>
               <p class="panel__text">
                 Reserved for a real, attributable quote from a client, with name and organisation.
@@ -92,7 +92,7 @@ export default function about({ content }) {
             <div class="panel">
               <p class="eyebrow" style="font-size:10.5px">Clients served</p>
               <p class="panel__title" style="font-size:19px; margin-top:10px">
-                [CLIENT LOGOS — placeholder]
+                Coming soon
               </p>
               <p class="panel__text">
                 Logos appear only with written permission from the client. Until then, this block

@@ -252,14 +252,27 @@ async function copyDir(from, to) {
   }
 }
 
+/** True while `value` is still an unfilled `[LIKE THIS]` placeholder. */
+const isPlaceholder = (value) => typeof value === 'string' && /^\[.*\]$/.test(value.trim());
+
+/**
+ * The sitemap protocol requires absolute URLs — with no real domain set yet,
+ * there's nothing valid to write, so this emits an empty (but well-formed)
+ * urlset rather than URLs with the literal placeholder text baked in.
+ */
 function renderSitemap(routes, site) {
+  const origin = isPlaceholder(site.origin) ? null : site.origin;
+  if (!origin) {
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n';
+  }
+
   const today = new Date().toISOString().slice(0, 10);
   const urls = routes
     .filter((r) => r.url !== '/404.html')
     .map(
       (r) =>
         `  <url>\n` +
-        `    <loc>${site.origin}${STANDALONE ? `/${fileFor(r.url)}` : r.url}</loc>\n` +
+        `    <loc>${origin}${STANDALONE ? `/${fileFor(r.url)}` : r.url}</loc>\n` +
         `    <lastmod>${today}</lastmod>\n` +
         `    <changefreq>${r.changefreq}</changefreq>\n` +
         `    <priority>${r.priority}</priority>\n` +
@@ -270,7 +283,8 @@ function renderSitemap(routes, site) {
 }
 
 function renderRobots(site) {
-  return `User-agent: *\nAllow: /\n\nSitemap: ${site.origin}/sitemap.xml\n`;
+  const origin = isPlaceholder(site.origin) ? null : site.origin;
+  return `User-agent: *\nAllow: /\n` + (origin ? `\nSitemap: ${origin}/sitemap.xml\n` : '');
 }
 
 /* ------------------------------------------------------------------ *

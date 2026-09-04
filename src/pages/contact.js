@@ -1,10 +1,31 @@
 import { contactButtons, contactRows } from '../components.js';
-import { breadcrumbJsonLd, detail, esc } from '../layout.js';
+import { breadcrumbJsonLd, esc } from '../layout.js';
 import { isPlaceholder } from '../content.js';
 
 export default function contact({ content }) {
   const { site } = content;
   const directions = isPlaceholder(site.address.directionsUrl) ? null : site.address.directionsUrl;
+  const mapQuery = isPlaceholder(site.address.mapQuery) ? null : site.address.mapQuery;
+
+  const mapBlock = mapQuery
+    ? `
+              <div class="shot" style="height:220px; border:1px solid var(--border)">
+                <iframe
+                  src="${esc(`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`)}"
+                  title="Map showing the Sisili General Supplies store location"
+                  style="width:100%; height:100%; border:0" loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+              ${
+                directions
+                  ? `<p class="mt-1"><a class="link-action" href="${esc(directions)}" rel="noopener">Get directions →</a></p>`
+                  : ''
+              }`
+    : `
+              <div class="shot shot--placeholder mt-2" style="height:150px" role="img"
+                   aria-label="Map showing the Sisili General Supplies store location">
+                Call or WhatsApp us for directions — a map is on its way.
+              </div>`;
 
   const main = `
       <section class="section--sand" style="padding:clamp(32px,5vw,64px) 0 clamp(20px,3vw,32px)">
@@ -29,15 +50,7 @@ export default function contact({ content }) {
                 ${contactRows(site)}
               </div>
 
-              <div class="shot shot--placeholder mt-2" style="height:150px" role="img"
-                   aria-label="Map showing the Sisili General Supplies store location">
-                Static map image<br>+ Directions link
-              </div>
-              ${
-                directions
-                  ? `<p class="mt-1"><a class="link-action" href="${esc(directions)}" rel="noopener">Get directions →</a></p>`
-                  : `<p class="small mt-1">Directions link: ${detail(site.address.directionsUrl)}</p>`
-              }
+              ${mapBlock}
             </div>
 
             <div class="panel panel--sand">

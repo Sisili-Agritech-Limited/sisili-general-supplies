@@ -166,8 +166,8 @@ ${itemRow(1)}
             <div class="field-grid">
               <p class="field field--full">
                 <label class="field__label" for="q-location">Delivery location</label>
-                <input class="input" id="q-location" name="location" type="text" data-summary="location"
-                       placeholder="Town / area, and a landmark if rural">
+                <input class="input" id="q-location" name="location" type="text" required
+                       data-summary="location" placeholder="Town / area, and a landmark if rural">
               </p>
               <p class="field">
                 <label class="field__label" for="q-needed">Needed by</label>

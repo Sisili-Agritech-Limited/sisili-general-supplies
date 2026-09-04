@@ -168,8 +168,8 @@ export default function home({ content }) {
                 invoices and four delivery dates. We take the whole list.
               </p>
               <p class="small">
-                Registered in Kenya · ${detail(site.registration.number)} ·
-                KRA PIN ${detail(site.registration.kraPin)} ·
+                Registered in Kenya · ${detail(site.registration.number, 'registration number available on request')} ·
+                KRA PIN ${detail(site.registration.kraPin, 'available on request')} ·
                 Physical store and store-room at ${detail(site.address.display)}.
               </p>
               <p><a class="link-action" href="/about/">More about the company →</a></p>
@@ -193,7 +193,7 @@ export default function home({ content }) {
             </div>
             <div class="panel panel--loam is-dark">
               <p class="eyebrow eyebrow--light">Testimonials</p>
-              <p class="panel__title">[CLIENT TESTIMONIAL — to be added]</p>
+              <p class="panel__title">Coming soon</p>
               <p class="panel__text">
                 Placeholder held until real, attributable client feedback exists. Nothing invented
                 here.
