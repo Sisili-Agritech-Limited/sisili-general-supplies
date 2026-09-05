@@ -32,8 +32,8 @@ const site = {
    * Contact channels. `display` is what a visitor reads; `raw` is the machine
    * form used for tel:/mailto:/wa.me links. Fill both.
    */
-  phone: { display: '+254 722 391593', raw: '+254722391593' },
-  whatsapp: { display: '+254 722 391593', raw: '254722391593' },
+  phone: { display: '+254 746 880391', raw: '+254746880391' },
+  whatsapp: { display: '+254 746 880391', raw: '254746880391' },
   email: { display: 'info@sisilisupplies.co.ke', raw: 'info@sisilisupplies.co.ke' },
 
   address: {
